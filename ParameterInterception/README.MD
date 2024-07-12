@@ -135,6 +135,74 @@ address_id可以对应一个(chain,address)，因此该表中无需chain字段�
 
 <a name="GFCcY"></a>
 ## 数据库相关代码
+所有代码都位于myfiled/database_mod.rs中
+
+```rust
+// 地址 -> 保护信息
+pub type AddressProtectInfo = HashMap<String, ProtectInfo>;
+#[derive(Debug, Clone)]
+pub struct DatabaseManager {
+    // 数据库连接
+    pub sql_pool: Arc<mysql::Pool>,
+    // chain => 地址保护信息
+    pub info: Arc<HashMap<ChainType, AddressProtectInfo>>,
+}
+#[derive(Debug, Clone)]
+pub struct ProtectInfo {
+    // 不变量
+    pub invariant: String,
+    // 相关的变量
+    pub variables: Vec<String>,
+    // 保护的选择器
+    pub selectors: Vec<String>,
+    // 变量 => slot
+    pub slot_map: HashMap<String, String>,
+    // 选择器 => index => 函数表达式
+    pub expression_map: HashMap<String, HashMap<u8, String>>,
+}
+```
+
+```rust
+// 这里的数据访问依赖于.env环境变量文件中的内容。
+// 例如：MYSQL_URL=mysql://root:1234@192.168.31.104:3306/new_data
+pub fn new() -> Result<Self, Box<dyn std::error::Error>> {
+        // 读取数据库
+        dotenv().ok();
+        let _sql_url = env::var("MYSQL_URL").unwrap();
+        Ok(Self {
+            sql_pool: Arc::new(mysql::Pool::new(_sql_url.as_str()).expect("error mysql url")),
+            info: Arc::new(HashMap::new()),
+        })
+}
+```
+
+```rust
+
+// 将数据库中的一部分内容加载到内存中
+// 用以提升执行效率
+pub fn load_data_to_local(&mut self) -> Result<(), Box<dyn std::error::Error>> {
+        // 获得连接
+        let mut conn = self.sql_pool.get_conn().unwrap();
+        // 按照chain分组，获得所有地址
+        let data: Vec<(u64, String, String, String)> = conn
+            .query("SELECT* FROM address_invariants GROUP BY chain,address")
+            .unwrap();
+        let all_chain: Vec<String> = data.iter().map(|(_, _, _, chain)| chain.clone()).collect();
+        let mut _info = HashMap::new();
+        for chain in all_chain {
+            let _type = ChainType::from_str(&chain).unwrap();
+            let mut _address_protect_info: AddressProtectInfo = HashMap::new();
+            for (_address_id, _address, _invariant, _) in data.iter() {
+                let pi =
+                    Self::get_pi(&mut conn, _address_id.clone(), &_address, _invariant).unwrap();
+                _address_protect_info.insert(_address.to_string(), pi);
+            }
+            _info.insert(_type, _address_protect_info);
+        }
+        self.info = Arc::new(_info);
+        Ok(())
+    }
+```
 <a name="sYkC9"></a>
 # 测试用例
 ```rust
