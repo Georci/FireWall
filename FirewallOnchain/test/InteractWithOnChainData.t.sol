@@ -5,8 +5,8 @@ import {FireWallRouter} from "../src/Implemention/Router.sol";
 import {FireWallRegistry} from "../src/Implemention/Registry.sol";
 import {IModule} from "../src/Implemention/IModule.sol";
 import {AuthModule} from "../src/Implemention/AuthenticationModule.sol";
-import {TestContract} from "../src/Implemention/test_contract.sol";
-import {CoinToken} from "../src/Implemention/testCoinToken.sol";
+import {TestContract} from "../src/example/test_contract.sol";
+import {CoinToken} from "../src/example/testCoinToken.sol";
 import {ParamCheckModule} from "../src/Implemention/ParamCheckModule.sol";
 
 //============================== proxy =============================
@@ -14,7 +14,7 @@ import {ProxyForRegistry} from "../src/proxy/proxyForRegistry.sol";
 import {FireWallRegistryV2} from "../src/Implemention/RegistryV2.sol";
 import {ProxyForRouter} from "../src/proxy/proxyForRouter.sol";
 import {FireWallRouterV2} from "../src/Implemention/RouterV2.sol";
-import {SimpleSwap} from "../src/Implemention/testFireWallexp.sol";
+import {SimpleSwap} from "../src/example/testFireWallexp.sol";
 import "../src/Implemention/interface.sol";
 // import "../out/testCoinToken.sol/CoinToken.json";
 
