@@ -60,20 +60,35 @@ contract FireWallRegistry {
 
     // =============================Events=============================
 
-    event RegisterInfo(address project, bytes4 funcSig, address manager, string[] params, address[] enableModules);
-    event AddModule(address detectModAddr, address detectModAdmin, string module_description, bool enable);
+    event RegisterInfo(
+        address project,
+        bytes4 funcSig,
+        address manager,
+        string[] params,
+        address[] enableModules
+    );
+    event AddModule(
+        address detectModAddr,
+        address detectModAdmin,
+        string module_description,
+        bool enable
+    );
     event UpdateModuleInfo(string module_name);
     event RemoveModuleInfo(string module_name);
     event PauseModule(address module_address);
     event UnpauseModule(address module_address);
     event PauseDetect();
-    event RemoveModuleForProject(address project, bytes4 funcSig, string module_description, address module_address);
+    event RemoveModuleForProject(
+        address project,
+        bytes4 funcSig,
+        string module_description,
+        address module_address
+    );
     event RemoveModule(string module_description, address module_address);
     event pauseProjectInteract(address project);
     event pasueProjectFunctionInteract(address project, bytes4 funcSig);
     event BatchSetInfo(address module_address);
     event RemovePartialInfo(address module_address);
-
 
     /**
      * @dev 为项目注册一个受保护函数。
@@ -91,13 +106,16 @@ contract FireWallRegistry {
         string[] memory params,
         address[] memory enableModules
     ) external {
-        protectFuncRegistry[project][funcSig] = ProtectInfo(params, enableModules, false);
+        protectFuncRegistry[project][funcSig] = ProtectInfo(
+            params,
+            enableModules,
+            false
+        );
         projectManagers[project] = manager;
         protectFuncSet[project].push(funcSig);
         pauseMap[project] = false;
         emit RegisterInfo(project, funcSig, manager, params, enableModules);
     }
-
 
     /**
      * @dev 为单个项目注册多个函数信息
@@ -114,9 +132,7 @@ contract FireWallRegistry {
         bytes4[] calldata funcSig,
         string[][] memory params,
         address[] memory enableModules
-    ) external {
-
-    }
+    ) external {}
 
     // =============================查询=============================
     /**
@@ -125,7 +141,10 @@ contract FireWallRegistry {
      * @param funcSig 函数选择器。
      * @return 受保护函数的信息。
      */
-    function getProtectInfo(address project, bytes4 funcSig) external view returns (ProtectInfo memory) {
+    function getProtectInfo(
+        address project,
+        bytes4 funcSig
+    ) external view returns (ProtectInfo memory) {
         return protectFuncRegistry[project][funcSig];
     }
 
@@ -135,7 +154,10 @@ contract FireWallRegistry {
      * @param funcSig 函数选择器。
      * @return 检测模块的地址列表。
      */
-    function getDetectModAddress(address project, bytes4 funcSig) external view returns (address[] memory) {
+    function getDetectModAddress(
+        address project,
+        bytes4 funcSig
+    ) external view returns (address[] memory) {
         return protectFuncRegistry[project][funcSig].enableModules;
     }
 
@@ -165,13 +187,15 @@ contract FireWallRegistry {
         emit UpdateModuleInfo(moduleNames[module_address]);
     }
 
-
     /**
      * @dev 删除项目在模块中的信息。
      * @param module_address 模块地址。
      * @param data 模块信息。
      */
-    function removeModuleInfo(address module_address, bytes memory data) external {
+    function removeModuleInfo(
+        address module_address,
+        bytes memory data
+    ) external {
         // 设置模块信息，只有owner、router、模块管理员可以调用
         IModule(module_address).removeInfo(data);
         // 释放事件
@@ -185,9 +209,16 @@ contract FireWallRegistry {
      * @param description 描述。
      * @param enable 启用状态。
      */
-    function addModule(address modAddreess, address modAdmin, string memory description, bool enable) external {
+    function addModule(
+        address modAddreess,
+        address modAdmin,
+        string memory description,
+        bool enable
+    ) external {
         // 添加模块
-        moduleInfos.push(ModuleInfo(address(modAddreess), modAdmin, description, enable));
+        moduleInfos.push(
+            ModuleInfo(address(modAddreess), modAdmin, description, enable)
+        );
         moduleNames[modAddreess] = description;
         moduleIndex[modAddreess] = uint64(moduleInfos.length);
         // 释放事件
@@ -203,7 +234,9 @@ contract FireWallRegistry {
         // 将待删除模块与最后一个模块交换
         if (module_index < moduleInfos.length - 1) {
             // 交换index
-            moduleIndex[moduleInfos[moduleInfos.length - 1].modAddress] = module_index;
+            moduleIndex[
+                moduleInfos[moduleInfos.length - 1].modAddress
+            ] = module_index;
             moduleIndex[modAddreess] = 0;
             moduleInfos[module_index] = moduleInfos[moduleInfos.length - 1];
         }
@@ -222,7 +255,8 @@ contract FireWallRegistry {
      */
     function pauseFunction(address project, bytes4 funcSig) external {
         require(
-            msg.sender == projectManagers[project] || msg.sender == owner, "Registry--pauseFunction:permission denied"
+            msg.sender == projectManagers[project] || msg.sender == owner,
+            "Registry--pauseFunction:permission denied"
         );
         protectFuncRegistry[project][funcSig].is_pause = true;
         // 释放事件
@@ -231,7 +265,8 @@ contract FireWallRegistry {
 
     function unpauseFunction(address project, bytes4 funcSig) external {
         require(
-            msg.sender == projectManagers[project] || msg.sender == owner, "Registry--unpauseFunction:permission denied"
+            msg.sender == projectManagers[project] || msg.sender == owner,
+            "Registry--unpauseFunction:permission denied"
         );
         protectFuncRegistry[project][funcSig].is_pause = false;
         // 释放事件
@@ -244,7 +279,8 @@ contract FireWallRegistry {
      */
     function pauseProject(address project) external {
         require(
-            msg.sender == projectManagers[project] || msg.sender == owner, "Registry--pauseProject:permission denied"
+            msg.sender == projectManagers[project] || msg.sender == owner,
+            "Registry--pauseProject:permission denied"
         );
         pauseMap[project] = true;
         // 释放事件
@@ -311,20 +347,32 @@ contract FireWallRegistry {
      * @param funcSig 函数选择器。
      * @param remove_module_address 待删除的模块地址。
      */
-    function removeModuleForProject(address project, bytes4 funcSig, address remove_module_address) external {
+    function removeModuleForProject(
+        address project,
+        bytes4 funcSig,
+        address remove_module_address
+    ) external {
         // 读取受保护的函数信息
-        address[] memory project_enableModules = protectFuncRegistry[project][funcSig].enableModules;
+        address[] memory project_enableModules = protectFuncRegistry[project][
+            funcSig
+        ].enableModules;
         // 遍历信息，将对应的模块删除
         for (uint256 i = 0; i < project_enableModules.length; i++) {
             address now_module = project_enableModules[i];
             if (now_module == remove_module_address) {
                 // 将待删除模块与最后一个模块交换
-                protectFuncRegistry[project][funcSig].enableModules[i] =
-                    project_enableModules[project_enableModules.length - 1];
+                protectFuncRegistry[project][funcSig].enableModules[
+                        i
+                    ] = project_enableModules[project_enableModules.length - 1];
                 // 删除最后一个模块
                 protectFuncRegistry[project][funcSig].enableModules.pop();
                 // 释放事件
-                emit RemoveModuleForProject(project, funcSig, moduleNames[now_module], now_module);
+                emit RemoveModuleForProject(
+                    project,
+                    funcSig,
+                    moduleNames[now_module],
+                    now_module
+                );
                 return;
             }
         }
@@ -336,12 +384,15 @@ contract FireWallRegistry {
         owner = new_owner;
     }
 
-    function setProjectManager(address project, address manager) external onlyOwner {
+    function setProjectManager(
+        address project,
+        address manager
+    ) external onlyOwner {
         projectManagers[project] = manager;
     }
 
     // =============================Initialize==================================
-    
+
     ///@notice Initialize registry's data.
     ///@param _owner The address of owner
     function initialize(address _owner) external {
@@ -355,9 +406,11 @@ contract FireWallRegistry {
     }
 
     // =============================ParamCheckModule==================================
-    function removePartialInfo(address module_address, bytes memory data) external {
+    function removePartialInfo(
+        address module_address,
+        bytes memory data
+    ) external {
         IParamCheckModule(module_address).removePartialInfo(data);
         emit RemovePartialInfo(module_address);
     }
-
 }

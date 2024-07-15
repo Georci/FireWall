@@ -87,7 +87,7 @@ contract FireWallRouterTest is Test {
             0xd55451d9AEbFAb33dEc7501Bd27A8C6649C11426
         );
         emit log_named_bytes("removeModuledata1 is :", removeModuledata1);
-        // proxyForRegistry.CallOn(addModuledata1);
+        proxyForRegistry.CallOn(addModuledata1);
         (bool success, ) = address(proxyForRegistry).call(addModuledata1);
         // 部署黑名单模块
         authModule = new AuthModule(

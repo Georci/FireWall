@@ -33,6 +33,7 @@ contract FireWallRouterV2 {
     ///@notice ProtectInfosize is the function getProtectInfo's returndata size.
     ///@notice info is the function getProtectInfo's returndata info.
     ///@notice is_ProjectPaused 表示从registry中查找项目是否暂停.
+    ///@param data 用作接受当前交易调用受保护项目的信息
     function executeWithDetect(bytes memory data) external returns (bool) {
         // 通过代理获取查询信息
         bytes memory Proxy_data = abi.encodeWithSignature(
@@ -73,7 +74,9 @@ contract FireWallRouterV2 {
         bool is_ProjectPaused = abi.decode(pauseMapInfo, (bool));
         require(!is_ProjectPaused, "project is pause interaction");
         require(!info.is_pause, "project function is pause interaction");
+
         // 遍历
+        // 利用接受到的当前交易信息以及获取到的受保护信息对当前交易是否合法进行判断
         for (uint256 index = 0; index < info.enableModules.length; index++) {
             address detectMod = info.enableModules[index];
             // 拆开参数
