@@ -1,7 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import {IModule} from "./IModule.sol";
+import {IModule} from "./Interface/IModule.sol";
 import {FireWallRegistry} from "./Registry.sol";
 import {ProxyForRegistry} from "../proxy/proxyForRegistry.sol";
 import "../../lib/forge-std/src/Test.sol";

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./IModule.sol";
+import "./Interface/IModule.sol";
 import {Test, console} from "../../lib/forge-std/src/Test.sol";
 
 /**

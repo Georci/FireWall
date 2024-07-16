@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "./IModule.sol";
-import "./IAuthenicationModule.sol";
-import "./IParamCheckModule.sol";
+import "./Interface/IModule.sol";
+import "./Interface/IAuthenicationModule.sol";
+import "./Interface/IParamCheckModule.sol";
 import {Test, console} from "../../lib/forge-std/src/Test.sol";
 
 /**
@@ -152,7 +152,7 @@ contract FireWallRegistry {
      * @dev 获取检测模块的地址。
      * @param project 项目地址。
      * @param funcSig 函数选择器。
-     * @return 检测模块的地址列表。
+     * @return 项目使用的检测模块的地址列表。
      */
     function getDetectModAddress(
         address project,

@@ -2,7 +2,7 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import {Test, console} from "../../lib/forge-std/src/Test.sol";
+import {Test, console} from "../../../lib/forge-std/src/Test.sol";
 
 interface CheatCodes {
     // This allows us to getRecordedLogs()

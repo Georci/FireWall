@@ -1,7 +1,7 @@
 import {Test, console} from "../lib/forge-std/src/Test.sol";
 import {FireWallRouter} from "../src/Implemention/Router.sol";
 import {FireWallRegistry} from "../src/Implemention/Registry.sol";
-import {IModule} from "../src/Implemention/IModule.sol";
+import {IModule} from "../src/Implemention/Interface/IModule.sol";
 import {AuthModule} from "../src/Implemention/AuthenticationModule.sol";
 import {TestContract} from "../src/example/test_contract.sol";
 import {ParamCheckModule} from "../src/Implemention/ParamCheckModule.sol";

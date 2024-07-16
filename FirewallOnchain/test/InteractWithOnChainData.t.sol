@@ -1,9 +1,7 @@
 import {Test, console} from "../lib/forge-std/src/Test.sol";
-// import "../lib/forge-std/src/StdCheats.sol";
-// import "../lib/forge-std/src/StdUtils.sol";
 import {FireWallRouter} from "../src/Implemention/Router.sol";
 import {FireWallRegistry} from "../src/Implemention/Registry.sol";
-import {IModule} from "../src/Implemention/IModule.sol";
+import {IModule} from "../src/Implemention/Interface/IModule.sol";
 import {AuthModule} from "../src/Implemention/AuthenticationModule.sol";
 import {TestContract} from "../src/example/test_contract.sol";
 import {CoinToken} from "../src/example/testCoinToken.sol";
@@ -15,7 +13,7 @@ import {FireWallRegistryV2} from "../src/Implemention/RegistryV2.sol";
 import {ProxyForRouter} from "../src/proxy/proxyForRouter.sol";
 import {FireWallRouterV2} from "../src/Implemention/RouterV2.sol";
 import {SimpleSwap} from "../src/example/testFireWallexp.sol";
-import "../src/Implemention/interface.sol";
+import "../src/Implemention/Interface/interface.sol";
 // import "../out/testCoinToken.sol/CoinToken.json";
 
 import "../src/proxy/utils/StorageSlot.sol";
@@ -44,18 +42,6 @@ contract TestFireWallThroughOnChainAttack is Test {
         IERC20(0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c);
     // reflectiveERC20 private constant bevo = reflectiveERC20(0xc6Cb12df4520B7Bf83f64C79c585b8462e18B6Aa);
     CoinToken bevo = CoinToken(0xc6Cb12df4520B7Bf83f64C79c585b8462e18B6Aa);
-    // CoinToken bevo2 =
-    //     new CoinToken(
-    //         "BEVO NFT Art Token",
-    //         "BEVO",
-    //         0x9,
-    //         0x12a05f200,
-    //         0,
-    //         0,
-    //         0,
-    //         0x473141B6f5E33DD90BD653940a854b58e83451DB,
-    //         0xacF1363E4E6e98dC6649cbD80069E3F95c677a8A
-    //     );
 
     IUniswapV2Pair private constant wbnb_usdc =
         IUniswapV2Pair(0xd99c7F6C65857AC913a8f880A4cb84032AB2FC5b);

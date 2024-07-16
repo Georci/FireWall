@@ -51,7 +51,7 @@ contract ParamCheckModule {
         bool isDiscrete
     ); // 移除某个参数特定的(部分的)拦截范围
 
-    // 与registry、router交互肯定是走proxy
+    // registry、router都是通过与其proxy交互
     constructor(address _routerProxy, address _registryProxy) {
         router = _routerProxy;
         registry = _registryProxy;
@@ -60,7 +60,7 @@ contract ParamCheckModule {
 
     /**
      * @dev 设置参数范围
-     * @param data 参数数据
+     * @param data 参数数据，被保护项目具体的函数保护信息
      */
     function setInfo(bytes memory data) external check {
         (
@@ -89,7 +89,7 @@ contract ParamCheckModule {
     }
 
     /**
-     * @dev 移除某个函数中特定位置参数全部的拦截参数(包括范围参数和离散参数)
+     * @dev 移除某个函数中特定位置参数全部的拦截参数
      * @param data 参数数据
      * @notice 这个地方我注意到如果一个函数的某个参数其拦截范围是离散的是不是需要移除其中一个范围的业务
      */
@@ -104,6 +104,7 @@ contract ParamCheckModule {
 
     /**
      * @dev 移除某个函数中特定位置参数部分的拦截参数
+     * @dev 如果是离散参数，则移除min，如果是连续参数，则移除[min,max]
      * @param data 参数数据
      */
     function removePartialInfo(bytes memory data) external check {
@@ -119,11 +120,7 @@ contract ParamCheckModule {
             uint256 bitPosition = min % 256;
             uint256 bitMask = 1 << bitPosition;
             if (
-                paramRanges[project][sig][index].discreteBlackParam[
-                    arrayIndex
-                ] &
-                    bitMask !=
-                0
+                paramRanges[project][sig][index].discreteBlackParam[arrayIndex] & bitMask != 0
             ) {
                 paramRanges[project][sig][index].discreteBlackParam[
                         arrayIndex
@@ -146,7 +143,7 @@ contract ParamCheckModule {
             delete paramRanges[project][sig][index].rangeBlackParam[min];
         }
     }
- 
+
     /**
      * @dev 检测参数是否在范围内
      * @param project 项目地址
