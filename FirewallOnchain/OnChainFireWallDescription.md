@@ -488,7 +488,7 @@ function setUp() public {
 该真实案例是针对通缩代币项目BEVO的攻击，通缩代币是指链上交易过程中具有通缩机制的加密货币。每当区块链上有一笔与之相关的交易时，都会自动扣除一定比例的代币，即通缩费，而这些通缩费又会分配给现有的持有者，增加流动性。
 <a name="4a4343a7"></a>
 ### 7.2 反射机制
-反射机制是实现通缩代币的一种主要方式，在反射机制中，用户每笔交易都会被收取一定的手续费，用于奖励持有代币的用户，但不会触发转账，只是修改一个比例系数。<br />在这个机制中，用户持有的代币数量有两种，分别为tAmount和rAmount。tAmount为用户实际持有的代币数量，rAmount为用户持有该代币的价值量，比例系数tTotal/rTotal，大致的代码实现如下：
+反射机制是实现通缩代币的一种主要方式，在反射机制中，用户每笔交易都会被收取一定的手续费，用于奖励持有代币的用户，但不会触发转账，只是修改一个比例系数。<br />在这个机制中，用户持有的代币数量有两种，分别为tAmount和rAmount。tAmount为用户实际持有的代币数量，rAmount为用户持有该代币的价值量，比例系数rTotal/tTotal，大致的代码实现如下：
 ```
 function balanceOf(address account) public view override returns (uint256) {
         if (_isExcluded[account]) return _tOwned[account];
