@@ -212,7 +212,7 @@ contract FireWallRegistryV2 {
                 moduleInfos[moduleInfos.length - 1].modAddress
             ] = module_index;
             moduleIndex[modAddreess] = 0;
-            moduleInfos[module_index] = moduleInfos[moduleInfos.length - 1];
+            moduleInfos[module_index - 1] = moduleInfos[moduleInfos.length - 1];
         }
         // 删除最后一个模块
         moduleInfos.pop();
