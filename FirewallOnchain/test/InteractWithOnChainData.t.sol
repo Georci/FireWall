@@ -188,22 +188,27 @@ contract TestFireWallThroughOnChainAttack is Test {
 
     function testOnchainAttackAfterUseFireWall() public {
         // prepare
-        bytes memory bytecodeWithFireWall = vm.getDeployedCode("testCoinToken.sol:CoinToken");
-        vm.etch(address(bevo), bytecodeWithFireWall);
+        // bytes memory bytecodeWithFireWall = vm.getDeployedCode("testCoinToken.sol:CoinToken");
+        // vm.etch(address(bevo), bytecodeWithFireWall);
 
-        // ========================deploy and registry test contract=====================
-        vm.startPrank(deployer, deployer);
-        // 注册信息
+        // // ========================deploy and registry test contract=====================
+        // vm.startPrank(deployer, deployer);
+        // // 注册信息
+        // string[] memory params = new string[](1);
+        // params[0] = "uint256";
+        // address[] memory enableModules = new address[](2);
+        // enableModules[0] = address(paramModule);
+        // enableModules[1] = address(authModule);
         string[] memory params = new string[](1);
         params[0] = "uint256";
         address[] memory enableModules = new address[](2);
-        enableModules[0] = address(paramModule);
-        enableModules[1] = address(authModule);
+        enableModules[0] = 0x178Fc46a6417532E58cF132cCFC2Ef874af6FBCA;
+        enableModules[1] = 0xe7C87c3E40e1a1F580C33A3B87d07379d141b47A;
         // 注册
         bytes memory registryData = abi.encodeWithSignature(
             "register(address,address,bytes4,string[],address[])",
             address(bevo),
-            deployer,
+            0xE03864F2673Ac19F9dB8512Cceb692817Cb1095E,
             bevo.deliver.selector,
             params,
             enableModules
