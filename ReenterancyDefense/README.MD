@@ -292,6 +292,20 @@ to_is_target变量值为true，则call调用中在此调用一次目标地址则
 
 最终，我们需要等到最外层call不回滚才能说明该交易是一笔脏读。
 
+<a name="s9YCp"></a>
+# 服务器数据
+![image.png](https://cdn.nlark.com/yuque/0/2024/png/25588623/1722306726736-c853c804-2ce3-49d2-b476-c3c75b10d627.png#averageHue=%23222832&clientId=uff6b68ca-8d14-4&from=paste&height=58&id=ue21465de&originHeight=73&originWidth=1006&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=13639&status=done&style=none&taskId=u0f996a35-6cc4-41ec-9542-a5544e3a4ba&title=&width=804.8)<br />data包含了用得上的数据
+
+1. 21-23年所有交易的call_trace![image.png](https://cdn.nlark.com/yuque/0/2024/png/25588623/1722306961061-3ea46800-4f6b-4d86-9e7f-97535e14f902.png#averageHue=%2321252e&clientId=uff6b68ca-8d14-4&from=paste&height=86&id=ue202ce15&originHeight=129&originWidth=2196&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=26685&status=done&style=none&taskId=u150cc431-875e-4975-961e-a399df48df2&title=&width=1464)
+2. 经过环路筛选的21-23所有交易![image.png](https://cdn.nlark.com/yuque/0/2024/png/25588623/1722307009026-e65fc8cb-d901-4100-9743-d1fd724d3b8d.png#averageHue=%23212732&clientId=uff6b68ca-8d14-4&from=paste&height=44&id=u4f58c598&originHeight=66&originWidth=2185&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=16178&status=done&style=none&taskId=u8f354759-697e-49c9-9c16-252c9793fea&title=&width=1456.6666666666667)
+3. 21-23年每个块的环路交易![image.png](https://cdn.nlark.com/yuque/0/2024/png/25588623/1722307033581-a01bd2c2-2665-468f-ae2b-02f9dc56a4c3.png#averageHue=%23212630&clientId=uff6b68ca-8d14-4&from=paste&height=65&id=yrBy6&originHeight=97&originWidth=2179&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=22758&status=done&style=none&taskId=ud5993b66-e54a-4872-a3cd-a483755f4c9&title=&width=1452.6666666666667)
+4. 21-23年已经跑出来的交易结果![image.png](https://cdn.nlark.com/yuque/0/2024/png/25588623/1722307060110-23a87f64-5e8d-4fd5-9330-46f604c779e5.png#averageHue=%2321252f&clientId=uff6b68ca-8d14-4&from=paste&height=69&id=u9c8d00b5&originHeight=103&originWidth=2197&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=21745&status=done&style=none&taskId=u6b0735e4-1bc1-4ff8-bd1b-c2ed981c341&title=&width=1464.6666666666667)
+
+注意：
+
+1. 状态机5还未完善
+2. 状态机4的实验还没跑完
+3. 还有一个文件result，里面包含了很多result，但是最初做实验时没有做标记，所以已经不知道是什么了😂
 <a name="jZMsH"></a>
 # todoList
 
