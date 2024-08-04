@@ -36,7 +36,8 @@
 ### 主要目标 (<=3)
 
 1.熟悉uniswap 白皮书 v1 v2源码
-https://github.com/IAMASCHOLAR/study-/W5.git
+
+https://github.com/IAMASCHOLAR/study-.git
 
 ### 次要目标(<=10)
 
