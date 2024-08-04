@@ -1,6 +1,6 @@
 # 2024-7
 
-## W3
+## W4
 
 ### 主要目标 (<=3)
 
@@ -28,6 +28,26 @@
 2，使用Web3连接Metamask（待定）钱包
 
 3，编写uniswap项目
-https://github.com/IAMASCHOLAR/IAMASCHOLAR.git
+
+# 2024-8
+
+## W1
+
+### 主要目标 (<=3)
+
+1.熟悉uniswap 白皮书 v1 v2源码
+https://github.com/IAMASCHOLAR/study-/W5.git
+
+### 次要目标(<=10)
+
+1.实现一个水管合约，功能是任何地址可以从这个合约获取原生代币
+
+
+
+### TodoList
+
+1，编写其他类型的基础智能合约，如创建一个远程购买合约，做一个智能售货机
+
+
 
 
