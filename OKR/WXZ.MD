@@ -47,3 +47,11 @@
     b. coinmarketgap的价格接口
 
 ### TodoList
+
+# 2024-8
+## W1
+
+
+### 主要目标
+1.制作价格操纵链上系统讲解ppt
+2.调研pull oracle工作方式
