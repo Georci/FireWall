@@ -17,12 +17,8 @@ contract PriceCleaningContract is IPriceCleaningContract {
     // 所有价格(链上、链下)统一使用24位小数
     uint8 public constant DECIMALS = 24;
 
-    // 存储当前价格清洗合约使用的主流交易所(用mapping还是用数组)
-    DexInfo[] public dexInfos;
-    mapping(address => uint8) tokenTodexInfoIndex;
-
-    // 通过deviationThreshold筛选出真实价格计算使用的交易所
-    DexInfo[] private usefulDexInfos;
+    // oracle address(每一个oracle地址代表了特定的代币对) => DexInfo
+    mapping(address => DexInfo[]) public oracleToDexInfo;
 
     // latestOffchianPrice from oracle contract
     int256 latestOffchianPrice;
@@ -31,15 +27,12 @@ contract PriceCleaningContract is IPriceCleaningContract {
     address owner;
 
     // Ken:目前我认为一个价格清洗合约应该对应一个代币对(当然不是指一个pair因为不同dex同一个币对的pair肯定不同)
-    address cleaningToken;
+    // address cleaningToken;
 
     event UpdateOffchainPrice(address updater, int256 updatePrice);
-    event UpdateOffchainPriceAndDecimals(
-        address updater,
-        int256 updatePrice,
-        uint8 updateDecimals
-    );
+
     event AddDexInfo(
+        address _oracle,
         address updater,
         string _dexName,
         string _poolDescription,
@@ -52,18 +45,23 @@ contract PriceCleaningContract is IPriceCleaningContract {
         address pool,
         address token
     );
+    event DelDexInfo(
+        address updater,
+        string _dexName,
+        string _poolDescription,
+        address pool
+    );
     event SetTokenPriceForOneDex(
-        address seter,
+        address updater,
         string _dexName,
         string _poolDescription,
         address pool,
         address token
     );
-    event SetTokenPriceForAllDexs(address seter, address token);
+    event SetTokenPriceForAllDexs(address updater, address token);
 
-    constructor(address _token) {
+    constructor() {
         owner = msg.sender;
-        cleaningToken = _token;
     }
 
     modifier OnlyOwner() {
@@ -81,14 +79,16 @@ contract PriceCleaningContract is IPriceCleaningContract {
      * @param _txAmount 该dex当前pool的交易数量(用于计算真实价格)
      */
     function addDexInfo(
+        address _oracle,
         string calldata _dexName,
         string calldata _poolDescription,
         address _pool,
         address _token,
         int256 _price,
-        uint8 _txAmount
+        uint8 _txAmount,
+        bool _isEnabled
     ) external OnlyOwner {
-        require(_token == cleaningToken, "Token is not cleaningToken");
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
         address token0 = IUniswapV2Pair(_pool).token0();
         address token1 = IUniswapV2Pair(_pool).token1();
         require(
@@ -108,12 +108,11 @@ contract PriceCleaningContract is IPriceCleaningContract {
                 pool: _pool,
                 token: _token,
                 price: _price,
-                txAmount: _txAmount
+                txAmount: _txAmount,
+                isEnabled: _isEnabled
             })
         );
-        tokenTodexInfoIndex[cleaningToken] = uint8(dexInfos.length - 1);
-
-        emit AddDexInfo(msg.sender, _dexName, _poolDescription, _pool);
+        emit AddDexInfo(_oracle, msg.sender, _dexName, _poolDescription, _pool);
     }
 
     /**
@@ -121,44 +120,63 @@ contract PriceCleaningContract is IPriceCleaningContract {
      * @param _dexName 交易所名称
      * @param _poolDescription 币对名称
      * @param _pool 币对地址
-     * @param index 交易所当前索引
      */
     function updateDexInfo(
+        address _oracle,
+        uint8 index,
         string calldata _dexName,
         string calldata _poolDescription,
         address _pool,
-        uint8 index
+        bool _isEnabled
     ) external OnlyOwner {
-        address token = cleaningToken;
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
 
         require(index < dexInfos.length, "index exceeds!");
         address token0 = IUniswapV2Pair(_pool).token0();
         address token1 = IUniswapV2Pair(_pool).token1();
         require(
-            token == token0 || token == token1,
+            dexInfos[index].token == token0 || dexInfos[index].token == token1,
             "This pool doesn't includes cleaningToken"
         );
 
         dexInfos[index].dexName = _dexName;
         dexInfos[index].poolDescription = _poolDescription;
         dexInfos[index].pool = _pool;
+        dexInfos[index].isEnabled = _isEnabled;
 
         emit UpdateDexInfo(
             msg.sender,
             _dexName,
             _poolDescription,
             _pool,
-            token
+            dexInfos[index].token
         );
     }
 
-    function setTokenPriceForAllDexs() public OnlyOwner {
+    function delDexInfo(address _oracle, uint8 index) external OnlyOwner {
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
+        string memory _dexName = dexInfos[index].dexName;
+        string memory _poolDescription = dexInfos[index].poolDescription;
+        address _pool = dexInfos[index].pool;
+
+        require(index < dexInfos.length, "index exceeds!");
+
+        dexInfos[index] = dexInfos[dexInfos.length - 1];
+        dexInfos.pop();
+
+        emit DelDexInfo(msg.sender, _dexName, _poolDescription, _pool);
+    }
+
+    function setTokenPriceForAllDexs(address _oracle) public OnlyOwner {
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
         int256 price;
+        address targetPool;
+        address targetToken;
         uint dexslength = dexInfos.length;
 
         for (uint8 i = 0; i < dexslength; i++) {
-            address targetPool = dexInfos[i].pool;
-            address targetToken = dexInfos[i].token;
+            targetPool = dexInfos[i].pool;
+            targetToken = dexInfos[i].token;
 
             address token0 = IUniswapV2Pair(targetPool).token0();
             address token1 = IUniswapV2Pair(targetPool).token1();
@@ -196,7 +214,7 @@ contract PriceCleaningContract is IPriceCleaningContract {
             }
             dexInfos[i].price = price;
         }
-        emit SetTokenPriceForAllDexs(tx.origin, cleaningToken);
+        emit SetTokenPriceForAllDexs(msg.sender, targetToken);
     }
 
     /**
@@ -204,28 +222,28 @@ contract PriceCleaningContract is IPriceCleaningContract {
      * @param index 查找的交易所信息位于当前数组中的位置
      */
     function getDexInfo(
+        address _oracle,
         uint8 index
     ) external view returns (DexInfo memory dexInfo) {
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
+
         require(index < dexInfos.length, "index exceeds limit!");
 
         dexInfo = dexInfos[index];
         return dexInfo;
     }
 
-    function getUsefulDexInfo(
-        uint8 index
-    ) external view returns (DexInfo memory dexInfo) {
-        require(index < usefulDexInfos.length, "index exceeds limit!");
-
-        dexInfo = usefulDexInfos[index];
-        return dexInfo;
-    }
-
     /**
      * @notice 为指定交易所中目标代币获取价格
+     * @param _oracle 进行价格清洗的代币对所对应的预言机合约地址
      * @param index 获取代币价格的交易所在当前数组中的位置
      */
-    function setTokenPriceForOneDex(uint8 index) public OnlyOwner {
+    function setTokenPriceForOneDex(
+        address _oracle,
+        uint8 index
+    ) public OnlyOwner {
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
+
         address targetPool = dexInfos[index].pool;
         address targetToken = dexInfos[index].token;
 
@@ -250,15 +268,6 @@ contract PriceCleaningContract is IPriceCleaningContract {
             DECIMALS
         );
 
-        console.log(
-            "normalized_token0_balance :",
-            uint256(normalized_token0_balance)
-        );
-        console.log(
-            "normalized_token1_balance :",
-            uint256(normalized_token1_balance)
-        );
-
         // 确保价格计算的正确性
         int256 price;
         if (targetToken == token0) {
@@ -276,12 +285,13 @@ contract PriceCleaningContract is IPriceCleaningContract {
         }
 
         dexInfos[index].price = price;
+
         emit SetTokenPriceForOneDex(
-            tx.origin,
+            msg.sender,
             dexInfos[index].dexName,
             dexInfos[index].poolDescription,
-            targetPool,
-            targetToken
+            dexInfos[index].pool,
+            dexInfos[index].token
         );
     }
 
@@ -328,13 +338,15 @@ contract PriceCleaningContract is IPriceCleaningContract {
      * @param _oracle 进行价格清洗的链下价格来源合约地址，此处会被用来获取当前链下价格与传入的交易所价格的最大差值
      */
     function cleanDexPrice(address _oracle) public OnlyOwner {
+        DexInfo[] storage dexInfos = oracleToDexInfo[_oracle];
+
         for (uint8 i = 0; i < dexInfos.length; i++) {
             int256 price;
             price = dexInfos[i].price;
-            bool isUseful = compareOffchainpriceWithFixedPrice(price, _oracle);
-            console.log("isUseful :", isUseful);
+            bool _isEnable = compareOffchainpriceWithFixedPrice(price, _oracle);
+            console.log("isEnable :", _isEnable);
 
-            if (isUseful) usefulDexInfos.push(dexInfos[i]);
+            dexInfos[i].isEnabled = _isEnable;
         }
     }
 
@@ -383,21 +395,17 @@ contract PriceCleaningContract is IPriceCleaningContract {
     // TODO:具体来说要需要获取几个交易所在当前以太坊浏览器中的交易占比，利用个交易所的交易占比乘以其交易所提供的价格计算真实价格
     /**
      * @notice 计算真实价格
-     * @param targetToken 进行价格清洗的代币地址
      */
     function calculateRealPrice(
-        address targetToken
+        address _oracle
     ) external OnlyOwner returns (int256 realPrice) {
-        require(targetToken == cleaningToken);
-
+        DexInfo[] memory dexInfos = oracleToDexInfo[_oracle];
         uint16 txTotal = 0;
         int256 weightedPriceSum = 0;
 
-        for (uint8 i = 0; i < usefulDexInfos.length; i++) {
-            txTotal += usefulDexInfos[i].txAmount;
-            weightedPriceSum +=
-                usefulDexInfos[i].price *
-                int8(usefulDexInfos[i].txAmount);
+        for (uint8 i = 0; i < dexInfos.length; i++) {
+            txTotal += dexInfos[i].txAmount;
+            weightedPriceSum += dexInfos[i].price * int8(dexInfos[i].txAmount);
         }
 
         console.log("txTotal is:", txTotal);
@@ -416,13 +424,5 @@ contract PriceCleaningContract is IPriceCleaningContract {
 
     function changeOwner(address newOwner) external OnlyOwner {
         owner = newOwner;
-    }
-
-    /**
-     * @notice 改变当前合约中目前代币地址
-     * @param _cleaningToken 可进行价格清洗代币0地址
-     */
-    function changeCleaningToken(address _cleaningToken) external OnlyOwner {
-        cleaningToken = _cleaningToken;
     }
 }

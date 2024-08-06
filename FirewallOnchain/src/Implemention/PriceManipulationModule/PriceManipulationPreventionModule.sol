@@ -188,14 +188,16 @@ contract PriceManipulationPrevention {
         );
 
         require(dexInfo.pool != address(0), "error address");
-        IPriceCleaningContract(priceCleanContract).setTokenPriceForAllDexs();
+        IPriceCleaningContract(priceCleanContract).setTokenPriceForAllDexs(
+            _oracle
+        );
         IPriceCleaningContract(priceCleanContract).updateOffchainPrice(
             _oracle,
             _needReciprocal
         );
         IPriceCleaningContract(priceCleanContract).cleanDexPrice(_oracle);
         int256 realPrice = IPriceCleaningContract(priceCleanContract)
-            .calculateRealPrice(dexInfo.token);
+            .calculateRealPrice(_oracle);
 
         console.log("realPrice is:", uint256(realPrice));
 
