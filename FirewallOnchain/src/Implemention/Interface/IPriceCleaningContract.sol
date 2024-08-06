@@ -41,7 +41,7 @@ interface IPriceCleaningContract {
         bool _needReciprocal
     ) external;
 
-    function cleanDexPrice() external;
+    function cleanDexPrice(address _oracle) external;
 
     function calculateRealPrice(address targetToken) external returns (int256);
 }

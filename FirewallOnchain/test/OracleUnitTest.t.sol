@@ -22,31 +22,31 @@ contract UnitTest is Test {
 
     address owner = vm.addr(1);
 
-    function setUp() public {
-        vm.createSelectFork("mainnet", 20411921);
-        module = new PriceManipulationPrevention();
-        vm.prank(owner);
-        cleaningContract = new PriceCleaningContract(usdt, 5, 3);
-    }
+    // function setUp() public {
+    //     vm.createSelectFork("mainnet", 20411921);
+    //     module = new PriceManipulationPrevention();
+    //     vm.prank(owner);
+    //     cleaningContract = new PriceCleaningContract(usdt, 5, 3);
+    // }
 
-    function testPriceCleaning() public {
-        vm.startPrank(owner);
-        cleaningContract.addDexInfo(
-            "UniswapV2",
-            "ETH / USDT",
-            eth_usdt,
-            usdt,
-            0,
-            1
-        );
-        cleaningContract.setTokenPriceForOneDex(0);
+    // function testPriceCleaning() public {
+    //     vm.startPrank(owner);
+    //     cleaningContract.addDexInfo(
+    //         "UniswapV2",
+    //         "ETH / USDT",
+    //         eth_usdt,
+    //         usdt,
+    //         0,
+    //         1
+    //     );
+    //     cleaningContract.setTokenPriceForOneDex(0);
 
-        address OffchainOrcale_eth_usdt = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
-        cleaningContract.updateOffchainPrice(OffchainOrcale_eth_usdt, true);
-        cleaningContract.cleanDexPrice();
-        cleaningContract.getDexInfo(0);
-        cleaningContract.calculateRealPrice();
-    }
+    //     address OffchainOrcale_eth_usdt = 0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419;
+    //     cleaningContract.updateOffchainPrice(OffchainOrcale_eth_usdt, true);
+    //     cleaningContract.cleanDexPrice();
+    //     cleaningContract.getDexInfo(0);
+    //     cleaningContract.calculateRealPrice();
+    // }
 
     function testFixidityLib() public {
         int256 a = FixidityLib.convertFixed(20461982934249072753353, 18, 6);

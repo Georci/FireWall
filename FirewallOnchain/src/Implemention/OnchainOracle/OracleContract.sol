@@ -40,6 +40,21 @@ contract OffchainAggregator is Owned, AggregatorV2V3Interface {
     // Highest answer the system is allowed to report in response to transmissions
     int192 public maxAnswer;
 
+    // Ken:The maximum allowed difference between offchain price and dex price
+    // example：0.5%, 5, 3
+    int192 deviationThresholdOffDex;
+    uint8 deviationThresholdOffDexDecimals;
+
+    // 当前代币价格在个交易所中对应的地址
+    struct onchainDex {
+        string dexName; // 交易所名字
+        string description; // 代币对描述
+        address pool; // 代币对地址
+        bool isHigherValueToken; // 是否是代币数量更少的代币(价值更高的)
+        bool isEnable; // 当前交易所是否启用
+    }
+    onchainDex[] public DexInfos;
+
     /*
      * Versioning
      */
@@ -83,6 +98,18 @@ contract OffchainAggregator is Owned, AggregatorV2V3Interface {
 
     function getVersion() external view returns (uint256) {
         return version;
+    }
+
+    function getDeviationThresholdOffDex() external view returns (int192) {
+        return deviationThresholdOffDex;
+    }
+
+    function getDeviationThresholdOffDexDecimals()
+        external
+        view
+        returns (uint8)
+    {
+        return deviationThresholdOffDexDecimals;
     }
 
     // getRoundData and latestRoundData should both raise "No data present"
@@ -161,7 +188,11 @@ contract OffchainAggregator is Owned, AggregatorV2V3Interface {
     function transmit(bytes calldata _report) external {
         ReportData memory r;
         r.hotVars = s_hotVars;
-        r.observations = abi.decode(_report, (int192[]));
+        (
+            r.observations,
+            deviationThresholdOffDex,
+            deviationThresholdOffDexDecimals
+        ) = abi.decode(_report, ((int192[]), int192, uint8));
 
         // Check the report contents, and record the result
         for (uint i = 0; i < r.observations.length - 1; i++) {
@@ -200,5 +231,79 @@ contract OffchainAggregator is Owned, AggregatorV2V3Interface {
         );
 
         s_hotVars = r.hotVars;
+    }
+
+    /**
+     * @notice 对于一个代币对种类，增加该代币对进行价格清洗时使用交易所信息
+     * @param _Info 链下构建的交易所信息
+     */
+    // TODO:缺少权限控制
+    function addOnchainDex(bytes calldata _Info) external {
+        onchainDex memory r;
+        r = abi.decode(_Info, (onchainDex));
+
+        for (uint8 i = 0; i < DexInfos.length; i++) {
+            require(r.pool != DexInfos[i].pool, "this pool has already exsit!");
+        }
+
+        DexInfos.push(r);
+    }
+
+    /**
+     * @notice 查看当前代币对进行价格清洗可使用的交易所信息
+     * @param index 数组索引
+     */
+    function getOnchainDex(
+        uint8 index
+    ) external view returns (onchainDex memory data) {
+        data = DexInfos[index];
+        return data;
+    }
+
+    /**
+     * @notice 对于一个代币对种类，删除该代币对进行价格清洗时使用交易所信息
+     * @param index 所移除的元素在数组中的索引
+     */
+    // TODO:缺少权限控制
+    function removeOnchainDex(uint8 index) external {
+        require(index < DexInfos.length, "Index out of bounds");
+
+        // 将要删除的元素与最后一个元素交换
+        DexInfos[index] = DexInfos[DexInfos.length - 1];
+        // 删除最后一个元素
+        DexInfos.pop();
+    }
+
+    /**
+     * @notice 更新交易所的池地址
+     * @param index 所要更新的交易所所在的索引
+     * @param newPool 新的池地址
+     */
+    function updatePool(uint8 index, address newPool) external {
+        require(index < DexInfos.length, "Index out of bounds");
+        DexInfos[index].pool = newPool;
+    }
+
+    /**
+     * @notice 更新交易所是否是价值更高的代币
+     * @param index 所要更新的交易所所在的索引
+     * @param isHigherValueToken 新的值
+     */
+    function updateIsHigherValueToken(
+        uint8 index,
+        bool isHigherValueToken
+    ) external {
+        require(index < DexInfos.length, "Index out of bounds");
+        DexInfos[index].isHigherValueToken = isHigherValueToken;
+    }
+
+    /**
+     * @notice 更新交易所是否启用
+     * @param index 所要更新的交易所所在的索引
+     * @param isEnabled 新的值
+     */
+    function updateIsEnabled(uint8 index, bool isEnabled) external {
+        require(index < DexInfos.length, "Index out of bounds");
+        DexInfos[index].isEnable = isEnabled;
     }
 }

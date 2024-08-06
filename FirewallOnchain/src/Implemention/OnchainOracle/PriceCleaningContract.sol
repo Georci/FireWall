@@ -8,7 +8,10 @@ import "../OnchainOracle/libraries/FixidityLib.sol";
 import "forge-std/Test.sol";
 
 // Q1:价格清洗合约应该是所有代币对共用一个，还是每个代币对对应一个，如果对应一个的话要不要持久化保存出数据
+// 目前来看是全部代币对共用一个价格清洗合约，并且我们建立一个合约用来存储所有代币对价格合约的索引
 // Q2:txAmount怎么得到，怎样设置？
+// 由链下传给链上，同样是以heartbeat和deviation threshold的方式传上来
+
 contract PriceCleaningContract is IPriceCleaningContract {
     using FixidityLib for *;
     // 所有价格(链上、链下)统一使用24位小数
@@ -24,10 +27,6 @@ contract PriceCleaningContract is IPriceCleaningContract {
     // latestOffchianPrice from oracle contract
     int256 latestOffchianPrice;
     uint8 offchainPricedecimals;
-
-    // example：0.5%, 5, 3
-    int192 deviationThreshold;
-    uint8 deviationThresholdDecimals;
 
     address owner;
 
@@ -62,15 +61,9 @@ contract PriceCleaningContract is IPriceCleaningContract {
     );
     event SetTokenPriceForAllDexs(address seter, address token);
 
-    constructor(
-        address _token,
-        int192 _deviationThreshold,
-        uint8 _deviationThresholdDecimals
-    ) {
+    constructor(address _token) {
         owner = msg.sender;
         cleaningToken = _token;
-        deviationThreshold = _deviationThreshold;
-        deviationThresholdDecimals = _deviationThresholdDecimals;
     }
 
     modifier OnlyOwner() {
@@ -332,12 +325,13 @@ contract PriceCleaningContract is IPriceCleaningContract {
 
     /**
      * @notice 清洗交易所中的价格，剔除掉不可信的代币价格
+     * @param _oracle 进行价格清洗的链下价格来源合约地址，此处会被用来获取当前链下价格与传入的交易所价格的最大差值
      */
-    function cleanDexPrice() public OnlyOwner {
+    function cleanDexPrice(address _oracle) public OnlyOwner {
         for (uint8 i = 0; i < dexInfos.length; i++) {
             int256 price;
             price = dexInfos[i].price;
-            bool isUseful = compareOffchainpriceWithFixedPrice(price);
+            bool isUseful = compareOffchainpriceWithFixedPrice(price, _oracle);
             console.log("isUseful :", isUseful);
 
             if (isUseful) usefulDexInfos.push(dexInfos[i]);
@@ -347,9 +341,11 @@ contract PriceCleaningContract is IPriceCleaningContract {
     /**
      * @notice 比较传入的链上价格与当前合约保存的链下价格，若二者差距大于deviationThreshold，则return false
      * @param onchainPrice 链上价格，使用int256(int64.int192)的形式保存
+     * @param _oracle 进行价格清洗的链下价格来源合约地址，此处会被用来获取当前链下价格与传入的交易所价格的最大差值
      */
     function compareOffchainpriceWithFixedPrice(
-        int256 onchainPrice
+        int256 onchainPrice,
+        address _oracle
     ) internal returns (bool) {
         int256 offchainPrice = latestOffchianPrice;
         require(offchainPrice != 0, "You need to upload offchian price first");
@@ -364,6 +360,11 @@ contract PriceCleaningContract is IPriceCleaningContract {
         console.log("priceDifference :", uint256(priceDifference));
 
         // 比较
+        int192 deviationThreshold = AggregatorV2V3Interface(_oracle)
+            .getDeviationThresholdOffDex();
+        uint8 deviationThresholdDecimals = AggregatorV2V3Interface(_oracle)
+            .getDeviationThresholdOffDexDecimals();
+
         require(
             deviationThreshold != 0,
             "You need to set deviationThreshold first"
@@ -388,7 +389,7 @@ contract PriceCleaningContract is IPriceCleaningContract {
         address targetToken
     ) external OnlyOwner returns (int256 realPrice) {
         require(targetToken == cleaningToken);
-        
+
         uint16 txTotal = 0;
         int256 weightedPriceSum = 0;
 
@@ -415,19 +416,6 @@ contract PriceCleaningContract is IPriceCleaningContract {
 
     function changeOwner(address newOwner) external OnlyOwner {
         owner = newOwner;
-    }
-
-    /**
-     * @notice 设置交易所中价格与链下价格允许偏差的阈值以及阈值的小数位数
-     * @param newDeviationThreshold 交易所中价格与链下价格允许偏差的阈值
-     * @param newDeviationThresholdDecimals 链下价格小数位数
-     */
-    function setDeviationThreshold(
-        int192 newDeviationThreshold,
-        uint8 newDeviationThresholdDecimals
-    ) external OnlyOwner {
-        deviationThreshold = newDeviationThreshold;
-        deviationThresholdDecimals = newDeviationThresholdDecimals;
     }
 
     /**

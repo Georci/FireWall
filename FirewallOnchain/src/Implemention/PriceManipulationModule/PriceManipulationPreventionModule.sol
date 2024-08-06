@@ -193,7 +193,7 @@ contract PriceManipulationPrevention {
             _oracle,
             _needReciprocal
         );
-        IPriceCleaningContract(priceCleanContract).cleanDexPrice();
+        IPriceCleaningContract(priceCleanContract).cleanDexPrice(_oracle);
         int256 realPrice = IPriceCleaningContract(priceCleanContract)
             .calculateRealPrice(dexInfo.token);
 

@@ -57,6 +57,13 @@ interface AggregatorV3Interface {
             uint256 updatedAt,
             uint80 answeredInRound
         );
+
+    function getDeviationThresholdOffDex() external view returns (int192);
+
+    function getDeviationThresholdOffDexDecimals()
+        external
+        view
+        returns (uint8);
 }
 
 interface AggregatorV2V3Interface is
